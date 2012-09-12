@@ -6,7 +6,7 @@
 // License: GPLv2+
 // Copyright (C) 2012-2013 M D Bokil
 
-const Version = "1.0.0";
+const Version = "1.0.1";
 const St = imports.gi.St;
 const PanelMenu = imports.ui.panelMenu;
 const PopupMenu = imports.ui.popupMenu;
