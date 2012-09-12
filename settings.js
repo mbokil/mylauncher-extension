@@ -1,0 +1,1 @@
+{"toolTips":true,"icon":"mylauncher.svg","OpenFileCmd":"xdg-open","menuIcons":true}
