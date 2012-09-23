@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist gettext-domain="markbokil.com-extensions">
+  <schema path="/org/gnome/shell/extensions/mylauncher/" id="org.gnome.shell.extensions.mylauncher">
+    <key type="b" name="menu-icons-key">
+     	<default>true</default>
+    	<summary>Enable menu icons.</summary>
+     	<description>Show icons for category type in the menu.</description>
+    </key>
+  </schema>
+</schemalist>
