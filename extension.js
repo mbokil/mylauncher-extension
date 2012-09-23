@@ -1,26 +1,32 @@
 // This extension was developed by :
 // * Mark Bokil http://markbokil.com
 // * http://markbokil.com/downloads/extensions/mylauncher
-// version: 1.0.1 BETA
+// version: 1.0.1
 // date: 9-1-12
 // License: GPLv2+
 // Copyright (C) 2012-2013 M D Bokil
 
 const Version = "1.0.1";
+const ModalDialog = imports.ui.modalDialog;
+const Gio = imports.gi.Gio; // file monitor
+const GLib = imports.gi.GLib;
 const St = imports.gi.St;
+const Main = imports.ui.main;
+const Util = imports.misc.util;
+const Lang = imports.lang;
+const Clutter = imports.gi.Clutter;
 const PanelMenu = imports.ui.panelMenu;
 const PopupMenu = imports.ui.popupMenu;
-const ModalDialog = imports.ui.modalDialog;
-const Util = imports.misc.util;
-const Main = imports.ui.main;
-const Lang = imports.lang;
-const GLib = imports.gi.GLib;
-const Gio = imports.gi.Gio; // file monitor
 const Shell = imports.gi.Shell;
-const Gettext = imports.gettext;
-const ExtensionUtils = imports.misc.extensionUtils; 
-const _ = Gettext.domain('mylauncher').gettext;
 
+const Gettext = imports.gettext.domain('markbokil.com-extensions');
+const _ = Gettext.gettext;
+const _N = function(x) { return x; }
+
+const ExtensionUtils = imports.misc.extensionUtils;
+const Me = ExtensionUtils.getCurrentExtension();
+const Convenience = Me.imports.convenience;
+const Keys = Me.imports.keys;
 
 const PropertiesFile = GLib.build_filenamev([global.userdatadir, 'extensions/mylauncher@markbokil.com/mylauncher.properties']);
 const SettingsJSON = GLib.build_filenamev([global.userdatadir, 'extensions/mylauncher@markbokil.com/settings.js']);
@@ -28,12 +34,18 @@ const AppDir = GLib.build_filenamev([global.userdatadir, 'extensions/mylauncher@
 const HelpURL = "http://markbokil.com/downloads/extensions/mylauncher/help.php?appname=mylauncher&version=" + Version;
 const AboutURL = "http://markbokil.com/downloads/extensions/mylauncher/about.php?appname=mylauncher&version=" + Version;
 
+const DEBUG = false;
+const PREFS_DIALOG = 'gnome-shell-extension-prefs mylauncher@markbokil.com';
+
+function debug(str) {
+    if (DEBUG) {
+        str = "[ MyLauncher ]--------> " + str;
+        global.log(str);
+    }
+}
 
 function MyLauncher(metadata)
 {   
-    let locales = metadata.path + "/locale";
-    Gettext.bindtextdomain('mylauncher', locales);
-
     this._init();
 }
 
@@ -45,8 +57,7 @@ function MyPopupMenuItem()
 MyPopupMenuItem.prototype =
 {
     __proto__: PopupMenu.PopupBaseMenuItem.prototype,
-    _init: function(gicon, text, params)
-    {
+    _init: function(gicon, text, params) {
         PopupMenu.PopupBaseMenuItem.prototype._init.call(this, params);
         this.box = new St.BoxLayout({ style_class: 'popup-combobox-item' });
         if (gicon)
@@ -65,27 +76,27 @@ MyLauncher.prototype =
 {
     __proto__: PanelMenu.Button.prototype,
     
-    _init: function(gicon) {        
+    _init: function(extensionMeta) {   
+        this.extensionMeta = extensionMeta;
+        this._settings = Convenience.getSettings();
+        this.menuIcons = this._settings.get_boolean(Keys.MENU_ICONS);     
+
+        debug('menuIcons ' + this.menuIcons );
         PanelMenu.Button.prototype._init.call(this, St.Align.START);
 
-        this._json = this._getAppSettings(); //load app settings from JSON file
-            
-        // safe fallback settings if json data file missing
-        if (!this._json) {
-            this._json = {"toolTips":false,"icon":"mylauncher.svg","OpenFileCmd":"xdg-open","menuIcons":true};
-            Main.notify("Settings.js file could not be read.");
-        }
+        //legacy apps properties, todo
+        this._json = {"toolTips":false,"icon":"mylauncher.svg","OpenFileCmd":"xdg-open"};
 
         //set icon svg or symbolic
         if (this._json.icon.indexOf(".") != -1) {
             this._iconActor = new St.Icon({ icon_size: Main.panel.actor.height, 
                                         icon_name: 'mylauncher',
                                         icon_type: St.IconType.SYMBOLIC,
-                                        style_class: 'appIcon' });
+                                        style_class: 'appIcon' }); //image icon
         } else {
             this._iconActor = new St.Icon({ icon_name: this._json.icon,
                                         icon_type: St.IconType.SYMBOLIC,
-                                        style_class: 'system-status-icon' });
+                                        style_class: 'system-status-icon' }); //symbolic icon
         }
 
         this.actor.add_actor(this._iconActor); 
@@ -100,7 +111,6 @@ MyLauncher.prototype =
         this._propLines = this._getProperties();  
 
         this._createMenu();
-        //this.actor.connect('button-release-event', Lang.bind(this, this._getRightClick));
         
     },
 
@@ -148,7 +158,7 @@ MyLauncher.prototype =
                       
             // setup menu icons if enabled
             let gicon = Gio.icon_new_for_string("emblem-system-symbolic"); //executable
-            if (this._json.menuIcons) {
+            if (this.menuIcons) {
                 if (propVal.indexOf('xdg-open') != -1) { //link or folder
                     if (propVal.indexOf('http') != -1 || propVal.indexOf('ftp') != -1) {
                         gicon = Gio.icon_new_for_string("starred-symbolic");
@@ -187,7 +197,7 @@ MyLauncher.prototype =
             }
         
             //add icons if on or use plain menuitem
-            if (this._json.menuIcons) {
+            if (this.menuIcons) {
                 this.item = new MyPopupMenuItem(gicon, propName, {});
             } else {
                 this.item = new PopupMenu.PopupMenuItem(propName);
@@ -198,7 +208,6 @@ MyLauncher.prototype =
               //     this.item.actor.tooltip_text = propVal;
               // }
 
-            
             if (lg) {
                 this.item.connect('activate', Lang.bind(this, function() { Main.createLookingGlass().toggle(); } ));  
             } 
@@ -222,6 +231,11 @@ MyLauncher.prototype =
 
         this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem()); //separator
 
+        this.settings = new PopupMenu.PopupMenuItem("Settings");
+        this.menu.addMenuItem(this.settings);
+        this.settings.connect('activate', Lang.bind(this, this._doPrefsDialog));
+
+
         this.help = new PopupMenu.PopupMenuItem("Help");
         this.menu.addMenuItem(this.help);
         this.help.connect('activate', Lang.bind(this, this._doHelp));
@@ -231,32 +245,12 @@ MyLauncher.prototype =
         this.about.connect('activate', Lang.bind(this, this._doAbout));
     },
 
-    _getAppSettings: function () {
-        try {
-            let prop = Shell.get_file_contents_utf8_sync(SettingsJSON);
-            let json = JSON.parse(prop);
-            return json;
-        } catch(e) {
-            global.logError(e);
-            return false;
-        }
+    _doPrefsDialog: function() {
+        debug('in doprefsdialog: ');
+        Main.Util.trySpawnCommandLine(PREFS_DIALOG);
+            
     },
 
-    _setAppSettings: function () {
-        try {
-            let f = Gio.file_new_for_path(SettingsJSON);
-            let raw = f.replace(null, false,
-                            Gio.FileCreateFlags.NONE,
-                            null);
-            let out = Gio.BufferedOutputStream.new_sized (raw, 4096);
-            Shell.write_string_to_stream(out, JSON.stringify(this.json));
-            out.close(null);
-        } catch(e) {
-            Main.notify("MyLauncher settings could not be saved.");
-            global.logError(e);
-        }
-    },
-    
     _on_file_changed: function() {
         // get altered mylauncher.properties data
         this._propLines = this._getProperties();
@@ -304,23 +298,36 @@ MyLauncher.prototype =
 
         for (x=0; x < cmds.length; x++) {
             try {
-                Util.spawnCommandLine(cmds[x]);
+                Main.Util.trySpawnCommandLine(cmds[x]);
             } catch(e) {
-                global.logError(e);
+                global.log(e.toString());
             }
         }
+    },
+
+    _setMenuIcons: function() {
+        this.menuIcons = this._settings.get_boolean(Keys.MENU_ICONS);
     },
 
     enable: function()
     {
         Main.panel._rightBox.insert_child_at_index(this.actor, 0);
         Main.panel._menus.addMenu(this.menu);
+        this._settingsSignals = [];
+        this._settingsSignals.push(this._settings.connect('changed::'+Keys.MENU_ICONS, Lang.bind(this, this._setMenuIcons)));
     },
 
     disable: function()
     {
         Main.panel._menus.removeMenu(this.menu);
         Main.panel._rightBox.remove_actor(this.actor);
+
+        // disconnect settings bindings 
+        for (x=0; x < this._settingsSignals.length; x++) {
+            global.screen.disconnect(this._settingsSignals[x]);
+        }
+        this._settingsSignals = [];
+        this._settingsSignals = null;
     }
 }
     
