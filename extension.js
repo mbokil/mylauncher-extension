@@ -71,7 +71,7 @@ MyPopupMenuItem.prototype =
     }
 }
 
-// Prototype
+
 MyLauncher.prototype =
 {
     __proto__: PanelMenu.Button.prototype,
@@ -100,7 +100,7 @@ MyLauncher.prototype =
         }
 
         this.actor.add_actor(this._iconActor); 
-        this._iconActor.get_parent().add_style_class_name("panelButtonWidth");
+        this.actor.add_style_class_name("appPanelBtn");
 
         // watch props file for changes
         let file = Gio.file_new_for_path(PropertiesFile);
@@ -112,6 +112,25 @@ MyLauncher.prototype =
 
         this._createMenu();
         
+    },
+
+    enable: function() {
+        Main.panel._rightBox.insert_child_at_index(this.actor, 0);
+        Main.panel._menus.addMenu(this.menu);
+        this._settingsSignals = [];
+        this._settingsSignals.push(this._settings.connect('changed::'+Keys.MENU_ICONS, Lang.bind(this, this._setMenuIcons)));
+    },
+
+    disable: function() {
+        Main.panel._menus.removeMenu(this.menu);
+        Main.panel._rightBox.remove_actor(this.actor);
+
+        // disconnect settings bindings 
+        for (x=0; x < this._settingsSignals.length; x++) {
+            global.screen.disconnect(this._settingsSignals[x]);
+        }
+        this._settingsSignals = [];
+        this._settingsSignals = null;
     },
 
     _onButtonPress: function(actor, event) {
@@ -289,8 +308,13 @@ MyLauncher.prototype =
     },
 
     _runCmd: function(propVal) {
-        var cmds;
-        if (propVal.indexOf(';') != -1) { // multiline commands split by ';'
+        if (propVal == '') {
+            Main.notify("No command was found to run.");
+            return;
+        }
+
+        let cmds;
+        if (propVal.indexOf(';') != -1) { // multi-line commands split by ';'
             cmds = propVal.split(';');
         } else {
             cmds = new Array(propVal);
@@ -299,6 +323,10 @@ MyLauncher.prototype =
         for (x=0; x < cmds.length; x++) {
             try {
                 Main.Util.trySpawnCommandLine(cmds[x]);
+                if (cmds[x].indexOf('clear-history.sh') != -1) {
+                    Main.notify("Recent files history was cleared.");
+                }
+
             } catch(e) {
                 global.log(e.toString());
             }
@@ -307,27 +335,6 @@ MyLauncher.prototype =
 
     _setMenuIcons: function() {
         this.menuIcons = this._settings.get_boolean(Keys.MENU_ICONS);
-    },
-
-    enable: function()
-    {
-        Main.panel._rightBox.insert_child_at_index(this.actor, 0);
-        Main.panel._menus.addMenu(this.menu);
-        this._settingsSignals = [];
-        this._settingsSignals.push(this._settings.connect('changed::'+Keys.MENU_ICONS, Lang.bind(this, this._setMenuIcons)));
-    },
-
-    disable: function()
-    {
-        Main.panel._menus.removeMenu(this.menu);
-        Main.panel._rightBox.remove_actor(this.actor);
-
-        // disconnect settings bindings 
-        for (x=0; x < this._settingsSignals.length; x++) {
-            global.screen.disconnect(this._settingsSignals[x]);
-        }
-        this._settingsSignals = [];
-        this._settingsSignals = null;
     }
 }
     
