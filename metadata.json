@@ -5,7 +5,7 @@
   "gettext-domain": "markbokil.com-extensions", 
   "name": "MyLauncher", 
   "shell-version": [
-    "3.4"
+    "3.4", "3.6"
   ], 
   "url": "http://markbokil.com/downloads/extensions/mylauncher", 
   "settings-schema": "org.gnome.shell.extensions.mylauncher",
