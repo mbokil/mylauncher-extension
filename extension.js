@@ -1,7 +1,7 @@
 // This extension was developed by :
 // * Mark Bokil http://markbokil.com
 // * http://markbokil.com/downloads/extensions/mylauncher
-// version: 1.0.1
+// version: 1.0.2
 // date: 9-1-12
 // License: GPLv2+
 // Copyright (C) 2012-2013 M D Bokil
@@ -29,12 +29,12 @@ const Convenience = Me.imports.convenience;
 const Keys = Me.imports.keys;
 
 const PropertiesFile = GLib.build_filenamev([global.userdatadir, 'extensions/mylauncher@markbokil.com/mylauncher.properties']);
-const SettingsJSON = GLib.build_filenamev([global.userdatadir, 'extensions/mylauncher@markbokil.com/settings.js']);
 const AppDir = GLib.build_filenamev([global.userdatadir, 'extensions/mylauncher@markbokil.com']);
+const HomeDir = GLib.get_home_dir();
 const HelpURL = "http://markbokil.com/downloads/extensions/mylauncher/help.php?appname=mylauncher&version=" + Version;
 const AboutURL = "http://markbokil.com/downloads/extensions/mylauncher/about.php?appname=mylauncher&version=" + Version;
 
-const DEBUG = false;
+const DEBUG = true;
 const PREFS_DIALOG = 'gnome-shell-extension-prefs mylauncher@markbokil.com';
 
 function debug(str) {
@@ -82,9 +82,11 @@ MyLauncher.prototype =
         this.menuIcons = this._settings.get_boolean(Keys.MENU_ICONS);     
 
         debug('menuIcons ' + this.menuIcons );
+        debug('home dir: ' + HomeDir);
         PanelMenu.Button.prototype._init.call(this, St.Align.START);
 
         //legacy apps properties, todo
+        //cinnamon requires toolTips property
         this._json = {"toolTips":false,"icon":"mylauncher.svg","OpenFileCmd":"xdg-open"};
 
         //set icon svg or symbolic
@@ -136,7 +138,7 @@ MyLauncher.prototype =
     _onButtonPress: function(actor, event) {
             let button = event.get_button();
             if (button == 1) {
-                this._doRefresh(); //rebuild launcher menu
+                this._rebuildMenu(); //rebuild launcher menu
             } else if (button == 3) {
                 this.menu.removeAll();
                 this._createContextMenu(); //build context menu
@@ -294,7 +296,7 @@ MyLauncher.prototype =
         Main.Util.spawnCommandLine(this._json.OpenFileCmd + " " + PropertiesFile);
     },
         
-    _doRefresh: function () {
+    _rebuildMenu: function () {
         this.menu.removeAll();
         this._createMenu();
     },
@@ -308,7 +310,7 @@ MyLauncher.prototype =
     },
 
     _runCmd: function(propVal) {
-        if (propVal == '') {
+        if (!propVal || propVal.trim(' ') == '') {
             Main.notify("No command was found to run.");
             return;
         }
@@ -320,7 +322,15 @@ MyLauncher.prototype =
             cmds = new Array(propVal);
         }
 
+        //execute all commands in array list
+        //replace ~ and $HOME vars with user home
         for (x=0; x < cmds.length; x++) {
+            if (cmds[x].indexOf('~') != -1) {
+                cmds[x] = cmds[x].replace('~', HomeDir);
+            }
+            if (cmds[x].indexOf('$HOME') != -1) {
+                cmds[x] = cmds[x].replace('$HOME', HomeDir);
+            }
             try {
                 Main.Util.trySpawnCommandLine(cmds[x]);
                 if (cmds[x].indexOf('clear-history.sh') != -1) {
