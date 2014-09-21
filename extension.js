@@ -47,11 +47,6 @@ function debug(str) {
     }
 }
 
-function MyLauncher(metadata)
-{   
-    this._init();
-}
-
 function MyPopupMenuItem()
 {
   this._init.apply(this, arguments);
@@ -74,6 +69,11 @@ MyPopupMenuItem.prototype =
     }
 }
 
+
+function MyLauncher(metadata)
+{   
+    this._init();
+}
 
 MyLauncher.prototype =
 {
