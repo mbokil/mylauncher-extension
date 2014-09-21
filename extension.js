@@ -113,26 +113,28 @@ const MyLauncher = new Lang.Class({
         this._propLines = this._getProperties();  
 
         this._createMenu();
-    },
-
-    enable: function() {
+        
         Main.panel.addToStatusArea("MyLauncher", this);
         Main.panel.menuManager.addMenu(this.menu);
         
         this._settingsSignals = [];
-        this._settingsSignals.push(this._settings.connect('changed::'+Keys.MENU_ICONS, Lang.bind(this, this._setMenuIcons)));
+        this._settingsSignals.push(
+            this._settings.connect('changed::' + Keys.MENU_ICONS,
+                                   Lang.bind(this, this._setMenuIcons)));
     },
 
-    disable: function() {
+    destroy: function () {
         Main.panel.menuManager.removeMenu(this.menu);
         Main.panel._rightBox.remove_actor(this.actor);
 
         // disconnect settings bindings 
-        for (x=0; x < this._settingsSignals.length; x++) {
+        for (x=0; x < this._settingsSignals.length; x++)
             global.screen.disconnect(this._settingsSignals[x]);
-        }
+
         this._settingsSignals = [];
         this._settingsSignals = null;
+
+        this.parent();
     },
 
     _onButtonPress: function(actor, event) {
@@ -341,8 +343,26 @@ const MyLauncher = new Lang.Class({
 });
     
 
-// Init function
+
+let _indicator;
+
 function init(metadata) 
-{       
-    return new MyLauncher(metadata);
+{
+    Convenience.initTranslations();
+}
+
+
+function enable() {
+    debug("Enabling");
+    
+    _indicator = new MyLauncher();
+}
+
+function disable() {
+    if(_indicator) {
+        debug("Disabling");
+        
+        _indicator.destroy();
+        _indicator = null;
+    }
 }
