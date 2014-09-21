@@ -67,7 +67,7 @@ MyPopupMenuItem.prototype =
         this.box.add(this.label);
         this.actor.add(this.box);
     }
-}
+};
 
 
 function MyLauncher(metadata)
@@ -345,7 +345,7 @@ MyLauncher.prototype =
     _setMenuIcons: function() {
         this.menuIcons = this._settings.get_boolean(Keys.MENU_ICONS);
     }
-}
+};
     
 
 // Init function
