@@ -120,7 +120,7 @@ MyLauncher.prototype =
     },
 
     enable: function() {
-        Main.panel._rightBox.insert_child_at_index(this.actor, 0);
+        Main.panel.addToStatusArea("MyLauncher", this);
         Main.panel.menuManager.addMenu(this.menu);
         
         this._settingsSignals = [];
