@@ -333,7 +333,7 @@ const MyLauncher = new Lang.Class({
             cmds = new Array(propVal);
         }
 
-        for (x=0; x < cmds.length; x++) {
+        for (let x = 0; x < cmds.length; x++) {
             try {
                 Main.Util.trySpawnCommandLine(cmds[x]);
                 if (cmds[x].indexOf('clear-history.sh') != -1) {
