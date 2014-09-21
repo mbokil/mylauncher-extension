@@ -117,18 +117,18 @@ MyLauncher.prototype =
         this._propLines = this._getProperties();  
 
         this._createMenu();
-        
     },
 
     enable: function() {
         Main.panel._rightBox.insert_child_at_index(this.actor, 0);
-        Main.panel._menus.addMenu(this.menu);
+        Main.panel.menuManager.addMenu(this.menu);
+        
         this._settingsSignals = [];
         this._settingsSignals.push(this._settings.connect('changed::'+Keys.MENU_ICONS, Lang.bind(this, this._setMenuIcons)));
     },
 
     disable: function() {
-        Main.panel._menus.removeMenu(this.menu);
+        Main.panel.menuManager.removeMenu(this.menu);
         Main.panel._rightBox.remove_actor(this.actor);
 
         // disconnect settings bindings 
