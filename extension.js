@@ -85,7 +85,11 @@ MyLauncher.prototype =
         PanelMenu.Button.prototype._init.call(this, St.Align.START);
 
         //legacy apps properties, todo
-        this._json = {"toolTips":false,"icon":"mylauncher.svg","OpenFileCmd":"xdg-open"};
+        this._json = {
+            toolTips: false,
+            icon: "mylauncher.svg",
+            OpenFileCmd: "xdg-open"
+        };
 
         //set icon svg or symbolic
         if (this._json.icon.indexOf(".") != -1) {
