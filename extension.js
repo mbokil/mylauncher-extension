@@ -72,10 +72,9 @@ const MyLauncher = new Lang.Class({
     Name: 'MyLauncher.MyLauncher',
     Extends: PanelMenu.Button,
     
-    _init: function(extensionMeta) {
+    _init: function() {
         this.parent(St.Align.START);
         
-        this.extensionMeta = extensionMeta;
         this._settings = Convenience.getSettings();
         this.menuIcons = this._settings.get_boolean(Keys.MENU_ICONS);     
 
