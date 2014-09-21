@@ -47,16 +47,14 @@ function debug(str) {
     }
 }
 
-function MyPopupMenuItem()
-{
-  this._init.apply(this, arguments);
-}
 
-MyPopupMenuItem.prototype =
-{
-    __proto__: PopupMenu.PopupBaseMenuItem.prototype,
+const MyPopupMenuItem = new Lang.Class({
+    Name: 'MyLauncher.MyPopupMenuItem',
+    Extends: PopupMenu.PopupBaseMenuItem,
+    
     _init: function(gicon, text, params) {
-        PopupMenu.PopupBaseMenuItem.prototype._init.call(this, params);
+        this.parent(params);
+        
         this.box = new St.BoxLayout({ style_class: 'popup-combobox-item' });
         if (gicon)
           this.icon = new St.Icon({ gicon: gicon, style_class: 'popup-menu-icon' });
@@ -67,25 +65,21 @@ MyPopupMenuItem.prototype =
         this.box.add(this.label);
         this.actor.add(this.box);
     }
-};
+});
 
 
-function MyLauncher(metadata)
-{   
-    this._init();
-}
-
-MyLauncher.prototype =
-{
-    __proto__: PanelMenu.Button.prototype,
+const MyLauncher = new Lang.Class({
+    Name: 'MyLauncher.MyLauncher',
+    Extends: PanelMenu.Button,
     
     _init: function(extensionMeta) {
+        this.parent(St.Align.START);
+        
         this.extensionMeta = extensionMeta;
         this._settings = Convenience.getSettings();
         this.menuIcons = this._settings.get_boolean(Keys.MENU_ICONS);     
 
         debug('menuIcons ' + this.menuIcons );
-        PanelMenu.Button.prototype._init.call(this, St.Align.START);
 
         //legacy apps properties, todo
         this._json = {
@@ -345,7 +339,7 @@ MyLauncher.prototype =
     _setMenuIcons: function() {
         this.menuIcons = this._settings.get_boolean(Keys.MENU_ICONS);
     }
-};
+});
     
 
 // Init function
