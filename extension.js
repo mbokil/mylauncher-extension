@@ -56,10 +56,19 @@ const MyPopupMenuItem = new Lang.Class({
         this.parent(params);
         
         this.box = new St.BoxLayout({ style_class: 'popup-combobox-item' });
-        if (gicon)
-          this.icon = new St.Icon({ gicon: gicon, style_class: 'popup-menu-icon' });
-        else
-          this.icon = new St.Icon({ icon_name: 'edit-clear', icon_size: 22 });
+        
+        if (gicon) {
+            this.icon = new St.Icon({
+                gicon: gicon,
+                style_class: 'system-status-icon'
+            });
+        } else {
+            this.icon = new St.Icon({
+                icon_name: 'edit-clear',
+                icon_size: 22
+            });
+        }
+        
         this.box.add(this.icon);
         this.label = new St.Label({ text: text });
         this.box.add(this.label);
