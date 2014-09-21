@@ -76,7 +76,7 @@ MyLauncher.prototype =
 {
     __proto__: PanelMenu.Button.prototype,
     
-    _init: function(extensionMeta) {   
+    _init: function(extensionMeta) {
         this.extensionMeta = extensionMeta;
         this._settings = Convenience.getSettings();
         this.menuIcons = this._settings.get_boolean(Keys.MENU_ICONS);     
@@ -100,10 +100,10 @@ MyLauncher.prototype =
                 style_class: 'system-status-icon'
             }); //symbolic icon
         }
-
+        
         this.actor.add_actor(this._iconActor); 
         this.actor.add_style_class_name("appPanelBtn");
-
+        
         // watch props file for changes
         let file = Gio.file_new_for_path(PropertiesFile);
         this._monitor = file.monitor(Gio.FileMonitorFlags.NONE, null);
