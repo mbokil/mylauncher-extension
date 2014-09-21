@@ -67,7 +67,7 @@ MyPopupMenuItem.prototype =
         this.box.add(this.icon);
         this.label = new St.Label({ text: text });
         this.box.add(this.label);
-        this.addActor(this.box);
+        this.actor.add(this.box);
     }
 }
 
