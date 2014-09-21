@@ -24,7 +24,7 @@ const Shell = imports.gi.Shell;
 
 const Gettext = imports.gettext.domain('markbokil.com-extensions');
 const _ = Gettext.gettext;
-const _N = function(x) { return x; }
+const _N = function(x) { return x; };
 
 const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
