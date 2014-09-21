@@ -6,6 +6,9 @@
 // License: GPLv2+
 // Copyright (C) 2012-2013 M D Bokil
 
+/*jslint esnext:true */
+/*global imports */
+
 const Version = "1.0.1";
 const ModalDialog = imports.ui.modalDialog;
 const Gio = imports.gi.Gio; // file monitor
