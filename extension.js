@@ -63,7 +63,7 @@ MyPopupMenuItem.prototype =
         if (gicon)
           this.icon = new St.Icon({ gicon: gicon, style_class: 'popup-menu-icon' });
         else
-          this.icon = new St.Icon({ icon_name: 'edit-clear', icon_type: St.IconType.SYMBOLIC, icon_size: 22 });
+          this.icon = new St.Icon({ icon_name: 'edit-clear', icon_size: 22 });
         this.box.add(this.icon);
         this.label = new St.Label({ text: text });
         this.box.add(this.label);
@@ -89,14 +89,16 @@ MyLauncher.prototype =
 
         //set icon svg or symbolic
         if (this._json.icon.indexOf(".") != -1) {
-            this._iconActor = new St.Icon({ icon_size: Main.panel.actor.height, 
-                                        icon_name: 'mylauncher',
-                                        icon_type: St.IconType.SYMBOLIC,
-                                        style_class: 'appIcon' }); //image icon
+            this._iconActor = new St.Icon({
+                icon_size: Main.panel.actor.height,
+                icon_name: 'mylauncher',
+                style_class: 'appIcon'
+            }); //image icon
         } else {
-            this._iconActor = new St.Icon({ icon_name: this._json.icon,
-                                        icon_type: St.IconType.SYMBOLIC,
-                                        style_class: 'system-status-icon' }); //symbolic icon
+            this._iconActor = new St.Icon({
+                icon_name: this._json.icon,
+                style_class: 'system-status-icon'
+            }); //symbolic icon
         }
 
         this.actor.add_actor(this._iconActor); 
