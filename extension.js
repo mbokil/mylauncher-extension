@@ -6,6 +6,9 @@
 // License: GPLv2+
 // Copyright (C) 2012-2013 M D Bokil
 
+/*jslint esnext:true */
+/*global imports */
+
 const Version = "1.0.1";
 const ModalDialog = imports.ui.modalDialog;
 const Gio = imports.gi.Gio; // file monitor
@@ -21,7 +24,7 @@ const Shell = imports.gi.Shell;
 
 const Gettext = imports.gettext.domain('markbokil.com-extensions');
 const _ = Gettext.gettext;
-const _N = function(x) { return x; }
+const _N = function(x) { return x; };
 
 const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
@@ -44,64 +47,72 @@ function debug(str) {
     }
 }
 
-function MyLauncher(metadata)
-{   
-    this._init();
-}
 
-function MyPopupMenuItem()
-{
-  this._init.apply(this, arguments);
-}
-
-MyPopupMenuItem.prototype =
-{
-    __proto__: PopupMenu.PopupBaseMenuItem.prototype,
+const MyPopupMenuItem = new Lang.Class({
+    Name: 'MyLauncher.MyPopupMenuItem',
+    Extends: PopupMenu.PopupBaseMenuItem,
+    
     _init: function(gicon, text, params) {
-        PopupMenu.PopupBaseMenuItem.prototype._init.call(this, params);
+        this.parent(params);
+        
         this.box = new St.BoxLayout({ style_class: 'popup-combobox-item' });
-        if (gicon)
-          this.icon = new St.Icon({ gicon: gicon, style_class: 'popup-menu-icon' });
-        else
-          this.icon = new St.Icon({ icon_name: 'edit-clear', icon_type: St.IconType.SYMBOLIC, icon_size: 22 });
+        
+        if (gicon) {
+            this.icon = new St.Icon({
+                gicon: gicon,
+                style_class: 'system-status-icon'
+            });
+        } else {
+            this.icon = new St.Icon({
+                icon_name: 'edit-clear',
+                icon_size: 22
+            });
+        }
+        
         this.box.add(this.icon);
         this.label = new St.Label({ text: text });
         this.box.add(this.label);
-        this.addActor(this.box);
+        this.actor.add(this.box);
     }
-}
+});
 
 
-MyLauncher.prototype =
-{
-    __proto__: PanelMenu.Button.prototype,
+const MyLauncher = new Lang.Class({
+    Name: 'MyLauncher.MyLauncher',
+    Extends: PanelMenu.Button,
     
-    _init: function(extensionMeta) {   
-        this.extensionMeta = extensionMeta;
+    _init: function() {
+        this.parent(St.Align.START);
+        
         this._settings = Convenience.getSettings();
         this.menuIcons = this._settings.get_boolean(Keys.MENU_ICONS);     
 
         debug('menuIcons ' + this.menuIcons );
-        PanelMenu.Button.prototype._init.call(this, St.Align.START);
 
         //legacy apps properties, todo
-        this._json = {"toolTips":false,"icon":"mylauncher.svg","OpenFileCmd":"xdg-open"};
+        this._json = {
+            toolTips: false,
+            icon: "mylauncher.svg",
+            OpenFileCmd: "xdg-open"
+        };
 
         //set icon svg or symbolic
         if (this._json.icon.indexOf(".") != -1) {
-            this._iconActor = new St.Icon({ icon_size: Main.panel.actor.height, 
-                                        icon_name: 'mylauncher',
-                                        icon_type: St.IconType.SYMBOLIC,
-                                        style_class: 'appIcon' }); //image icon
+            this._iconActor = new St.Icon({
+                icon_size: Main.panel.actor.height,
+                icon_name: 'mylauncher',
+                style_class: 'appIcon'
+            }); //image icon
         } else {
-            this._iconActor = new St.Icon({ icon_name: this._json.icon,
-                                        icon_type: St.IconType.SYMBOLIC,
-                                        style_class: 'system-status-icon' }); //symbolic icon
+            this._iconActor = new St.Icon({
+                icon_name: this._json.icon,
+                style_class: 'system-status-icon'
+            }); //symbolic icon
         }
-
+        
         this.actor.add_actor(this._iconActor); 
         this.actor.add_style_class_name("appPanelBtn");
-
+        
         // watch props file for changes
         let file = Gio.file_new_for_path(PropertiesFile);
         this._monitor = file.monitor(Gio.FileMonitorFlags.NONE, null);
@@ -112,25 +123,27 @@ MyLauncher.prototype =
 
         this._createMenu();
         
-    },
-
-    enable: function() {
-        Main.panel._rightBox.insert_child_at_index(this.actor, 0);
-        Main.panel._menus.addMenu(this.menu);
+        Main.panel.addToStatusArea("MyLauncher", this);
+        Main.panel.menuManager.addMenu(this.menu);
+        
         this._settingsSignals = [];
-        this._settingsSignals.push(this._settings.connect('changed::'+Keys.MENU_ICONS, Lang.bind(this, this._setMenuIcons)));
+        this._settingsSignals.push(
+            this._settings.connect('changed::' + Keys.MENU_ICONS,
+                                   Lang.bind(this, this._setMenuIcons)));
     },
 
-    disable: function() {
-        Main.panel._menus.removeMenu(this.menu);
+    destroy: function () {
+        Main.panel.menuManager.removeMenu(this.menu);
         Main.panel._rightBox.remove_actor(this.actor);
 
         // disconnect settings bindings 
-        for (x=0; x < this._settingsSignals.length; x++) {
+        for (x=0; x < this._settingsSignals.length; x++)
             global.screen.disconnect(this._settingsSignals[x]);
-        }
+
         this._settingsSignals = [];
         this._settingsSignals = null;
+
+        this.parent();
     },
 
     _onButtonPress: function(actor, event) {
@@ -320,7 +333,7 @@ MyLauncher.prototype =
             cmds = new Array(propVal);
         }
 
-        for (x=0; x < cmds.length; x++) {
+        for (let x = 0; x < cmds.length; x++) {
             try {
                 Main.Util.trySpawnCommandLine(cmds[x]);
                 if (cmds[x].indexOf('clear-history.sh') != -1) {
@@ -336,11 +349,29 @@ MyLauncher.prototype =
     _setMenuIcons: function() {
         this.menuIcons = this._settings.get_boolean(Keys.MENU_ICONS);
     }
-}
+});
     
 
-// Init function
+
+let _indicator;
+
 function init(metadata) 
-{       
-    return new MyLauncher(metadata);
+{
+    Convenience.initTranslations();
+}
+
+
+function enable() {
+    debug("Enabling");
+    
+    _indicator = new MyLauncher();
+}
+
+function disable() {
+    if(_indicator) {
+        debug("Disabling");
+        
+        _indicator.destroy();
+        _indicator = null;
+    }
 }
